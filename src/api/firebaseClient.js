@@ -18,7 +18,8 @@ import {
   where,
   orderBy,
   limit,
-  onSnapshot
+  onSnapshot,
+  setDoc
 } from 'firebase/firestore';
 import {
   ref,
@@ -119,7 +120,7 @@ export const userService = {
       const docData = { ...userData, updatedAt: new Date() };
       await updateDoc(userRef, docData).catch(() => {
         // If document doesn't exist, create it
-        return updateDoc(userRef, { ...docData, createdAt: new Date() }, { merge: true });
+        return setDoc(userRef, { ...docData, createdAt: new Date() }, { merge: true });
       });
       return userData;
     } catch (error) {
