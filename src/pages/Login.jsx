@@ -6,7 +6,7 @@ import { Mail, Lock, LogIn, Chrome } from "lucide-react";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setAuthError } = useAuth();
+  const { setAuthError, setIsAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,8 +43,14 @@ export default function Login() {
       } else {
         setError(err.message || "Failed to authenticate. Please try again.");
       }
+      setAuthError({
+        type: 'login_error',
+        message: err.message || "Failed to authenticate"
+      });
     } finally {
       setIsLoading(false);
+      setAuthError(null);
+      setIsAuthenticated(true);
     }
   };
 

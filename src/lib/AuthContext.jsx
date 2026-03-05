@@ -80,6 +80,7 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       user,
       isAuthenticated,
+      setIsAuthenticated,
       isLoadingAuth,
       isLoadingPublicSettings: false, // No loading for Firebase
       authError,
