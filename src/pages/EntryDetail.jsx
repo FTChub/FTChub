@@ -60,6 +60,7 @@ export default function EntryDetail() {
 
   const isBookmarked = bookmarks.some((b) => b.entry_id === entryId);
   const hasUpvoted = entry?.upvoted_by?.includes(user?.email);
+  const isAdmin = user?.role === "admin";
 
   const upvoteMutation = useMutation({
     mutationFn: async () => {

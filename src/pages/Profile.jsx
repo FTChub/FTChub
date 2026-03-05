@@ -10,17 +10,26 @@ import { useToast } from "@/components/ui/use-toast";
 import { User, Save } from "lucide-react";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [username, setUsername] = useState(user?.username || "");
 
   const updateProfileMutation = useMutation({
     mutationFn: async (updates) => {
+      // Check if username is already taken
+      if (updates.username && updates.username !== user.username) {
+        const allUsers = await userService.getAllUsers();
+        const existingUser = allUsers.find(u => u.username === updates.username && u.uid !== user.uid);
+        if (existingUser) {
+          throw new Error('Username is already taken');
+        }
+      }
       await userService.updateUserProfile(user.uid, updates);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["user", user.uid] });
+      await refreshUser();
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
@@ -29,7 +38,7 @@ export default function Profile() {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error.message || "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     },

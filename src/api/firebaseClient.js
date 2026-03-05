@@ -429,11 +429,17 @@ export const commentService = {
     try {
       const commentsQuery = query(
         collection(db, 'comments'),
-        where('entry_id', '==', entryId),
-        orderBy('createdAt', 'asc')
+        where('entry_id', '==', entryId)
       );
       const querySnapshot = await getDocs(commentsQuery);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let comments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort by createdAt client-side to avoid index requirement
+      comments.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateA - dateB;
+      });
+      return comments;
     } catch (error) {
       console.error('Get comments error:', error);
       throw error;

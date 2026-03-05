@@ -72,9 +72,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const navigateToLogin = () => {
-    // Redirect to login page
-    window.location.href = '/Login';
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      try {
+        const userData = await userService.getUser(auth.currentUser.uid);
+        if (userData) {
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Error refreshing user data:', error);
+      }
+    }
   };
 
   return (
@@ -89,6 +97,7 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings,
       logout,
       navigateToLogin,
+      refreshUser,
       checkAppState: () => {} // No-op for Firebase
     }}>
       {children}
