@@ -480,11 +480,17 @@ export const messageService = {
     try {
       const messagesQuery = query(
         collection(db, 'messages'),
-        where('recipient_id', '==', userId),
-        orderBy('createdAt', 'desc')
+        where('recipient_id', '==', userId)
       );
       const querySnapshot = await getDocs(messagesQuery);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let messages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // sort client-side descending by createdAt to avoid needing an index
+      messages.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+      return messages;
     } catch (error) {
       console.error('Get messages error:', error);
       throw error;
@@ -497,11 +503,17 @@ export const messageService = {
       const messagesQuery = query(
         collection(db, 'messages'),
         where('sender_id', 'in', [userId1, userId2]),
-        where('recipient_id', 'in', [userId1, userId2]),
-        orderBy('createdAt', 'asc')
+        where('recipient_id', 'in', [userId1, userId2])
       );
       const querySnapshot = await getDocs(messagesQuery);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let messages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // sort ascending by createdAt client-side
+      messages.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateA - dateB;
+      });
+      return messages;
     } catch (error) {
       console.error('Get conversation error:', error);
       throw error;
