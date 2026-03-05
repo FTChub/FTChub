@@ -136,7 +136,7 @@ export const uploadFile = async (file) => {
 };
 
 // keep the old shape so minimal frontend changes
-export const api = {
+export const base44 = {
   auth: authApi,
   entities: {
     User: usersApi,
