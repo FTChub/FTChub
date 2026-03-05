@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+
+// utility to normalize firestore timestamps to Date
+const parseTimestamp = (ts) => {
+  if (!ts) return new Date(0);
+  if (ts.toDate) return ts.toDate();
+  return new Date(ts);
+};
 import { useAuth } from "@/lib/AuthContext";
 import { messageService, userService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -194,7 +201,7 @@ export default function Messages() {
                       {conv.lastMessage.content}
                     </p>
                     <p className="text-slate-500 text-xs mt-1">
-                      {format(new Date(conv.lastMessage.createdAt), "MMM d, HH:mm")}
+                      {format(parseTimestamp(conv.lastMessage.createdAt), "MMM d, HH:mm")}
                     </p>
                   </div>
                 ))}
@@ -235,7 +242,7 @@ export default function Messages() {
                         <p className={`text-xs mt-1 ${
                           message.sender_id === user.uid ? "text-orange-200" : "text-slate-400"
                         }`}>
-                          {format(new Date(message.createdAt), "MMM d, HH:mm")}
+                          {format(parseTimestamp(message.createdAt), "MMM d, HH:mm")}
                         </p>
                         {message.sender_id !== user.uid && !message.read && (
                           <Button
