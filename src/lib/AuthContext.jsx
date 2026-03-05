@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { authService, userService } from '@/api/firebaseClient';
+import { auth } from '@/lib/firebase';
 
 const AuthContext = createContext();
 
@@ -78,9 +79,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const refreshUser = async () => {
-    if (auth.currentUser) {
+    // use authService helper if available
+    const current = authService.getCurrentUser ? authService.getCurrentUser() : auth.currentUser;
+    if (current) {
       try {
-        const userData = await userService.getUser(auth.currentUser.uid);
+        const userData = await userService.getUser(current.uid);
         if (userData) {
           setUser(userData);
         }
