@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [authError, setAuthError] = useState(null);
+  const [authError, setAuthError] = useState('auth_required');
   const [appPublicSettings, setAppPublicSettings] = useState({ id: 'ftc-hub' }); // Mock settings for Firebase
 
   useEffect(() => {
