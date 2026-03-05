@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React from "react";
+import { entryService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import EntryCard from "@/components/entries/EntryCard";
 import EmptyState from "@/components/entries/EmptyState";
@@ -16,23 +16,20 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function MyEntries() {
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+  const { user } = useAuth();
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ["my-entries", user?.email],
-    queryFn: () => base44.entities.TeamEntry.filter({ created_by: user?.email }, "-created_date"),
+    queryFn: () => entryService.getEntriesByUser(user?.email),
     enabled: !!user?.email,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.TeamEntry.delete(id),
+    mutationFn: (id) => entryService.deleteEntry(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["my-entries"] }),
   });
 

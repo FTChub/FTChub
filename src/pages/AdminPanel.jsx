@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState } from "react";
+import { userService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,26 +10,23 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function AdminPanel() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [user, setUser] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [inviteMessage, setInviteMessage] = useState(null);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["all-users"],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => userService.getAllUsers(),
     enabled: user?.role === "admin",
   });
 
   const updateRoleMutation = useMutation({
-    mutationFn: ({ id, role }) => base44.entities.User.update(id, { role }),
+    mutationFn: ({ id, role }) => userService.updateUserRole(id, role),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["all-users"] }),
   });
 
@@ -38,11 +35,19 @@ export default function AdminPanel() {
     setInviting(true);
     setInviteMessage(null);
     try {
-      await base44.users.inviteUser(inviteEmail.trim(), "admin");
-      setInviteMessage({ type: "success", text: `Admin invitation sent to ${inviteEmail}` });
+      // For Firebase, we'll just update the user's role if they exist
+      // In a real implementation, you'd send an email invitation
+      // For now, we'll assume the user exists and update their role
+      const existingUser = users.find(u => u.email === inviteEmail.trim());
+      if (existingUser) {
+        await userService.updateUserRole(existingUser.uid, "admin");
+        setInviteMessage({ type: "success", text: `User ${inviteEmail} is now an admin` });
+      } else {
+        setInviteMessage({ type: "error", text: "User not found. They must sign up first." });
+      }
       setInviteEmail("");
-    } catch (e) {
-      setInviteMessage({ type: "error", text: "Failed to send invitation. Please check the email and try again." });
+    } catch {
+      setInviteMessage({ type: "error", text: "Failed to update user role. Please try again." });
     }
     setInviting(false);
   };
@@ -84,7 +89,7 @@ export default function AdminPanel() {
         <CardHeader className="pb-4">
           <CardTitle className="text-white text-base flex items-center gap-2">
             <UserPlus className="w-4 h-4 text-orange-400" />
-            Invite New Admin
+            Make User Admin
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -95,7 +100,7 @@ export default function AdminPanel() {
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                placeholder="Enter email address"
+                placeholder="Enter user email"
                 className="pl-10 bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-600"
               />
             </div>
@@ -105,7 +110,7 @@ export default function AdminPanel() {
               className="bg-orange-500 hover:bg-orange-600 text-white gap-2 shrink-0"
             >
               {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              Invite Admin
+              Make Admin
             </Button>
           </div>
           {inviteMessage && (
@@ -132,7 +137,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {admins.map((u) => (
-                <div key={u.id} className="flex items-center gap-3 py-2">
+                <div key={u.uid} className="flex items-center gap-3 py-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
                     {u.full_name?.[0]?.toUpperCase() || u.email?.[0]?.toUpperCase()}
                   </div>
@@ -143,7 +148,7 @@ export default function AdminPanel() {
                   <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20 border text-xs shrink-0">
                     Admin
                   </Badge>
-                  {u.id !== user.id && (
+                  {u.uid !== user.uid && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-500 hover:text-red-400 shrink-0">
@@ -160,7 +165,7 @@ export default function AdminPanel() {
                         <AlertDialogFooter>
                           <AlertDialogCancel className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => updateRoleMutation.mutate({ id: u.id, role: "user" })}
+                            onClick={() => updateRoleMutation.mutate({ id: u.uid, role: "user" })}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Remove Admin
@@ -189,7 +194,7 @@ export default function AdminPanel() {
           ) : (
             <div className="space-y-3">
               {regularUsers.map((u) => (
-                <div key={u.id} className="flex items-center gap-3 py-2">
+                <div key={u.uid} className="flex items-center gap-3 py-2">
                   <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-300 text-xs font-bold shrink-0">
                     {u.full_name?.[0]?.toUpperCase() || u.email?.[0]?.toUpperCase()}
                   </div>
@@ -214,7 +219,7 @@ export default function AdminPanel() {
                       <AlertDialogFooter>
                         <AlertDialogCancel className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => updateRoleMutation.mutate({ id: u.id, role: "admin" })}
+                          onClick={() => updateRoleMutation.mutate({ id: u.uid, role: "admin" })}
                           className="bg-orange-600 hover:bg-orange-700"
                         >
                           Make Admin

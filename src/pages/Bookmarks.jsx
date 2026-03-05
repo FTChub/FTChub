@@ -1,26 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React from "react";
+import { entryService, bookmarkService } from "@/api/firebaseClient";
 import { useQuery } from "@tanstack/react-query";
 import EntryCard from "@/components/entries/EntryCard";
 import EmptyState from "@/components/entries/EmptyState";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function Bookmarks() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
+  const { user } = useAuth();
 
   const { data: bookmarks = [], isLoading: loadingBm } = useQuery({
     queryKey: ["bookmarks", user?.email],
-    queryFn: () => base44.entities.Bookmark.filter({ user_email: user?.email }),
+    queryFn: () => bookmarkService.getBookmarksByUser(user?.email),
     enabled: !!user?.email,
   });
 
   const { data: allEntries = [], isLoading: loadingEntries } = useQuery({
     queryKey: ["entries-for-bookmarks"],
-    queryFn: () => base44.entities.TeamEntry.list("-created_date", 500),
+    queryFn: () => entryService.getAllEntries(500),
     enabled: bookmarks.length > 0,
   });
 

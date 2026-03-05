@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { entryService } from "@/api/firebaseClient";
 import { useQuery } from "@tanstack/react-query";
 import EntryCard from "@/components/entries/EntryCard";
 import CategoryFilter from "@/components/entries/CategoryFilter";
@@ -15,7 +15,7 @@ export default function Home() {
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey: ["entries"],
-    queryFn: () => base44.entities.TeamEntry.list("-created_date", 200),
+    queryFn: () => entryService.getAllEntries(200),
   });
 
   const filtered = useMemo(() => {

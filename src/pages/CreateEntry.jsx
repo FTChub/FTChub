@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { entryService, fileService } from "@/api/firebaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, X, Loader2, Plus, Send } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 const categories = [
   { value: "robot_design", label: "Robot Design" },
@@ -25,6 +26,7 @@ const categories = [
 
 export default function CreateEntry() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState("");
@@ -61,8 +63,12 @@ export default function CreateEntry() {
     setUploading(true);
     const urls = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      urls.push(file_url);
+      try {
+        const { file_url } = await fileService.uploadFile(file);
+        urls.push(file_url);
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
     }
     updateField("image_urls", [...form.image_urls, ...urls]);
     setUploading(false);
@@ -74,22 +80,36 @@ export default function CreateEntry() {
     setUploading(true);
     const urls = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      urls.push(file_url);
+      try {
+        const { file_url } = await fileService.uploadFile(file);
+        urls.push(file_url);
+      } catch (error) {
+        console.error('Upload error:', error);
+      }
     }
     updateField("file_urls", [...form.file_urls, ...urls]);
     setUploading(false);
   };
 
   const handleSubmit = async () => {
+    if (!user?.email) return;
+    
     setSaving(true);
-    await base44.entities.TeamEntry.create({
-      ...form,
-      upvotes: 0,
-      upvoted_by: [],
-      view_count: 0,
-    });
-    navigate(createPageUrl("Home"));
+    try {
+      await entryService.createEntry({
+        ...form,
+        upvotes: 0,
+        upvoted_by: [],
+        view_count: 0,
+        created_by: user.email,
+        created_date: new Date().toISOString(),
+      });
+      navigate(createPageUrl("Home"));
+    } catch (error) {
+      console.error('Create entry error:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const isValid = form.team_number && form.title && form.category;

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React from "react";
+import { entryService, bookmarkService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -17,33 +17,34 @@ import {
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { categoryLabels, categoryColors } from "@/components/entries/EntryCard";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function EntryDetail() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const entryId = urlParams.get("id");
 
-  const [user, setUser] = useState(null);
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", entryId],
     queryFn: async () => {
-      const entries = await base44.entities.TeamEntry.filter({ id: entryId });
-      const e = entries[0];
-      // increment view count
-      base44.entities.TeamEntry.update(e.id, { view_count: (e.view_count || 0) + 1 });
-      return e;
+      const e = await entryService.getEntry(entryId);
+      if (e) {
+        // Increment view count
+        await entryService.updateEntry(entryId, { 
+          view_count: (e.view_count || 0) + 1 
+        });
+        return { ...e, view_count: (e.view_count || 0) + 1 };
+      }
+      return null;
     },
     enabled: !!entryId,
   });
 
   const { data: bookmarks = [] } = useQuery({
     queryKey: ["bookmarks", user?.email],
-    queryFn: () => base44.entities.Bookmark.filter({ user_email: user?.email }),
+    queryFn: () => bookmarkService.getBookmarksByUser(user?.email),
     enabled: !!user?.email,
   });
 
@@ -52,15 +53,15 @@ export default function EntryDetail() {
 
   const upvoteMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.email) return;
+      if (!user?.email || !entry) return;
       const upvoted_by = entry.upvoted_by || [];
       if (hasUpvoted) {
-        await base44.entities.TeamEntry.update(entry.id, {
+        await entryService.updateEntry(entry.id, {
           upvotes: Math.max(0, (entry.upvotes || 0) - 1),
           upvoted_by: upvoted_by.filter((e) => e !== user.email),
         });
       } else {
-        await base44.entities.TeamEntry.update(entry.id, {
+        await entryService.updateEntry(entry.id, {
           upvotes: (entry.upvotes || 0) + 1,
           upvoted_by: [...upvoted_by, user.email],
         });
@@ -72,18 +73,21 @@ export default function EntryDetail() {
   const isAdmin = user?.role === "admin";
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.TeamEntry.delete(entry.id),
+    mutationFn: () => entryService.deleteEntry(entry.id),
     onSuccess: () => navigate(createPageUrl("Home")),
   });
 
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.email) return;
+      if (!user?.email || !entry) return;
       if (isBookmarked) {
         const bm = bookmarks.find((b) => b.entry_id === entryId);
-        if (bm) await base44.entities.Bookmark.delete(bm.id);
+        if (bm) await bookmarkService.deleteBookmark(bm.id);
       } else {
-        await base44.entities.Bookmark.create({ entry_id: entryId, user_email: user.email });
+        await bookmarkService.createBookmark({ 
+          entry_id: entryId, 
+          user_email: user.email 
+        });
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["bookmarks", user?.email] }),

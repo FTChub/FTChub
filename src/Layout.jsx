@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/AuthContext";
+import { authService } from "@/api/firebaseClient";
 import {
   Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield
 } from "lucide-react";
@@ -15,16 +15,12 @@ const navItems = [
 ];
 
 export default function Layout({ children, currentPageName }) {
-  const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
-
-  const handleLogout = () => {
-    base44.auth.logout();
+  const handleLogout = async () => {
+    await authService.signOut();
   };
 
   return (
