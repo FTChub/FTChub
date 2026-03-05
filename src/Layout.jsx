@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { authService } from "@/api/firebaseClient";
 import {
-  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield
+  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare
 } from "lucide-react";
 
 const navItems = [
@@ -12,6 +12,11 @@ const navItems = [
   { name: "Create Entry", page: "CreateEntry", icon: Plus },
   { name: "My Entries", page: "MyEntries", icon: FolderOpen },
   { name: "Bookmarks", page: "Bookmarks", icon: Bookmark },
+];
+
+const userMenuItems = [
+  { name: "Profile", page: "Profile", icon: User },
+  { name: "Messages", page: "Messages", icon: MessageSquare },
 ];
 
 export default function Layout({ children, currentPageName }) {
@@ -105,6 +110,31 @@ export default function Layout({ children, currentPageName }) {
               {currentPageName === "AdminPanel" && <ChevronRight className="w-4 h-4 ml-auto" />}
             </Link>
           )}
+
+          {/* User Menu Items */}
+          <div className="mt-4 pt-4 border-t border-slate-700/30">
+            {userMenuItems.map(({ name, page, icon: Icon }) => {
+              const isActive = currentPageName === page;
+              return (
+                <Link
+                  key={page}
+                  to={createPageUrl(page)}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-sm font-medium
+                    ${isActive
+                      ? "bg-orange-500/10 text-orange-400"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    }
+                  `}
+                >
+                  <Icon className="w-4.5 h-4.5" />
+                  {name}
+                  {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                </Link>
+              );
+            })}
+          </div>
         </nav>
 
         {user && (
@@ -114,7 +144,7 @@ export default function Layout({ children, currentPageName }) {
                 {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">{user.full_name || "User"}</p>
+                <p className="text-white text-sm font-medium truncate">{user.username || user.full_name || "User"}</p>
                 <p className="text-slate-500 text-xs truncate">{user.email}</p>
               </div>
               <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors">

@@ -1,5 +1,5 @@
-import React from "react";
-import { entryService, bookmarkService } from "@/api/firebaseClient";
+import React, { useState } from "react";
+import { entryService, bookmarkService, commentService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, Eye, Calendar, Tag, Download, ExternalLink, Trash2
+  ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, Eye, Calendar, Tag, Download, ExternalLink, Trash2, MessageSquare, Send
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,13 +18,17 @@ import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { categoryLabels, categoryColors } from "@/components/entries/EntryCard";
 import { useAuth } from "@/lib/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function EntryDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const entryId = urlParams.get("id");
+  const [commentText, setCommentText] = useState("");
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", entryId],
@@ -46,6 +50,12 @@ export default function EntryDetail() {
     queryKey: ["bookmarks", user?.email],
     queryFn: () => bookmarkService.getBookmarksByUser(user?.email),
     enabled: !!user?.email,
+  });
+
+  const { data: comments = [] } = useQuery({
+    queryKey: ["comments", entryId],
+    queryFn: () => commentService.getCommentsForEntry(entryId),
+    enabled: !!entryId,
   });
 
   const isBookmarked = bookmarks.some((b) => b.entry_id === entryId);
@@ -70,11 +80,50 @@ export default function EntryDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["entry", entryId] }),
   });
 
-  const isAdmin = user?.role === "admin";
+  const handleSubmitComment = () => {
+    if (!commentText.trim() || !user) return;
+
+    createCommentMutation.mutate({
+      entry_id: entryId,
+      user_id: user.uid,
+      username: user.username,
+      content: commentText.trim(),
+    });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: () => entryService.deleteEntry(entry.id),
     onSuccess: () => navigate(createPageUrl("Home")),
+  });
+
+  const createCommentMutation = useMutation({
+    mutationFn: async (commentData) => {
+      await commentService.createComment(commentData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", entryId] });
+      setCommentText("");
+      toast({
+        title: "Comment added",
+        description: "Your comment has been posted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to post comment. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId) => {
+      await commentService.deleteComment(commentId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", entryId] });
+    },
   });
 
   const bookmarkMutation = useMutation({
@@ -276,6 +325,70 @@ export default function EntryDetail() {
           </CardContent>
         </Card>
       )}
+
+      {/* Comments Section */}
+      <Card className="bg-slate-800/30 border-slate-700/30 mt-8">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <MessageSquare className="w-5 h-5" />
+            Comments ({comments.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {user ? (
+            <div className="mb-6">
+              <Textarea
+                placeholder="Write a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="bg-slate-900/50 border-slate-600 text-white resize-none mb-3"
+                rows={3}
+              />
+              <Button
+                onClick={handleSubmitComment}
+                disabled={!commentText.trim() || createCommentMutation.isPending}
+                className="bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
+              </Button>
+            </div>
+          ) : (
+            <div className="text-center py-4 mb-6 bg-slate-900/50 rounded-lg">
+              <p className="text-slate-400">Please log in to comment</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {comments.map((comment) => (
+              <div key={comment.id} className="border-b border-slate-700/30 pb-4 last:border-b-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-orange-400 font-medium">{comment.username}</span>
+                    <span className="text-slate-500 text-sm">
+                      {format(new Date(comment.createdAt), "MMM d, yyyy 'at' HH:mm")}
+                    </span>
+                  </div>
+                  {(user?.uid === comment.user_id || isAdmin) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteCommentMutation.mutate(comment.id)}
+                      className="text-slate-400 hover:text-red-400"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-white leading-relaxed">{comment.content}</p>
+              </div>
+            ))}
+            {comments.length === 0 && (
+              <p className="text-slate-500 text-center py-8">No comments yet. Be the first to comment!</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

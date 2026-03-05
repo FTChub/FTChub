@@ -52,7 +52,9 @@ import Bookmarks from './pages/Bookmarks';
 import CreateEntry from './pages/CreateEntry';
 import EntryDetail from './pages/EntryDetail';
 import Home from './pages/Home';
+import Messages from './pages/Messages';
 import MyEntries from './pages/MyEntries';
+import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -62,7 +64,9 @@ export const PAGES = {
     "CreateEntry": CreateEntry,
     "EntryDetail": EntryDetail,
     "Home": Home,
+    "Messages": Messages,
     "MyEntries": MyEntries,
+    "Profile": Profile,
 }
 
 export const pagesConfig = {

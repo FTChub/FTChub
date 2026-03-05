@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }) => {
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               full_name: firebaseUser.displayName || firebaseUser.email,
+              username: firebaseUser.displayName || firebaseUser.email.split('@')[0], // Default username
               role: 'user', // Default role
               createdAt: new Date(),
               updatedAt: new Date()

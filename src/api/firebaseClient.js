@@ -150,6 +150,18 @@ export const userService = {
       console.error('Update user role error:', error);
       throw error;
     }
+  },
+
+  // Update user profile
+  updateUserProfile: async (userId, updates) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { ...updates, updatedAt: new Date() });
+      return true;
+    } catch (error) {
+      console.error('Update user profile error:', error);
+      throw error;
+    }
   }
 };
 
@@ -392,5 +404,124 @@ export const realtimeService = {
       }
     });
     return unsubscribe;
+  }
+};
+
+// Comments management
+export const commentService = {
+  // Create comment
+  createComment: async (commentData) => {
+    try {
+      const docRef = await addDoc(collection(db, 'comments'), {
+        ...commentData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      return { id: docRef.id, ...commentData };
+    } catch (error) {
+      console.error('Create comment error:', error);
+      throw error;
+    }
+  },
+
+  // Get comments for entry
+  getCommentsForEntry: async (entryId) => {
+    try {
+      const commentsQuery = query(
+        collection(db, 'comments'),
+        where('entry_id', '==', entryId),
+        orderBy('createdAt', 'asc')
+      );
+      const querySnapshot = await getDocs(commentsQuery);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Get comments error:', error);
+      throw error;
+    }
+  },
+
+  // Delete comment
+  deleteComment: async (commentId) => {
+    try {
+      await deleteDoc(doc(db, 'comments', commentId));
+      return true;
+    } catch (error) {
+      console.error('Delete comment error:', error);
+      throw error;
+    }
+  }
+};
+
+// Messages management
+export const messageService = {
+  // Send message
+  sendMessage: async (messageData) => {
+    try {
+      const docRef = await addDoc(collection(db, 'messages'), {
+        ...messageData,
+        createdAt: new Date(),
+        read: false
+      });
+      return { id: docRef.id, ...messageData };
+    } catch (error) {
+      console.error('Send message error:', error);
+      throw error;
+    }
+  },
+
+  // Get messages for user
+  getMessagesForUser: async (userId) => {
+    try {
+      const messagesQuery = query(
+        collection(db, 'messages'),
+        where('recipient_id', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      const querySnapshot = await getDocs(messagesQuery);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Get messages error:', error);
+      throw error;
+    }
+  },
+
+  // Get conversation between two users
+  getConversation: async (userId1, userId2) => {
+    try {
+      const messagesQuery = query(
+        collection(db, 'messages'),
+        where('sender_id', 'in', [userId1, userId2]),
+        where('recipient_id', 'in', [userId1, userId2]),
+        orderBy('createdAt', 'asc')
+      );
+      const querySnapshot = await getDocs(messagesQuery);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Get conversation error:', error);
+      throw error;
+    }
+  },
+
+  // Mark message as read
+  markAsRead: async (messageId) => {
+    try {
+      const messageRef = doc(db, 'messages', messageId);
+      await updateDoc(messageRef, { read: true });
+      return true;
+    } catch (error) {
+      console.error('Mark as read error:', error);
+      throw error;
+    }
+  },
+
+  // Delete message
+  deleteMessage: async (messageId) => {
+    try {
+      await deleteDoc(doc(db, 'messages', messageId));
+      return true;
+    } catch (error) {
+      console.error('Delete message error:', error);
+      throw error;
+    }
   }
 };
