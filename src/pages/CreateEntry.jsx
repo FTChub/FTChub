@@ -141,7 +141,7 @@ export default function CreateEntry() {
                 <Input
                   value={form.team_number}
                   onChange={(e) => updateField("team_number", e.target.value)}
-                  placeholder="e.g. 12345"
+                  placeholder="e.g. 33517"
                   className="mt-1.5 bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-600"
                 />
               </div>
@@ -150,7 +150,7 @@ export default function CreateEntry() {
                 <Input
                   value={form.team_name}
                   onChange={(e) => updateField("team_name", e.target.value)}
-                  placeholder="e.g. Tech Titans"
+                  placeholder="e.g. New Horizons"
                   className="mt-1.5 bg-slate-900/50 border-slate-700/50 text-white placeholder:text-slate-600"
                 />
               </div>
