@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
         setIsAuthenticated(false);
-        setAuthError({ type: 'auth_required' });
+        // Don't set authError here - just show login page
       }
 
       setIsLoadingAuth(false);
@@ -72,15 +72,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // Trigger Google sign in
-    console.log("prompting user to sign in with Google");
-    authService.signInWithGoogle().catch((error) => {
-      console.error('Login error:', error);
-      setAuthError({
-        type: 'login_error',
-        message: 'Failed to sign in with Google'
-      });
-    });
+    // Redirect to login page
+    window.location.href = '/Login';
   };
 
   return (
@@ -90,6 +83,7 @@ export const AuthProvider = ({ children }) => {
       isLoadingAuth,
       isLoadingPublicSettings: false, // No loading for Firebase
       authError,
+      setAuthError,
       appPublicSettings,
       logout,
       navigateToLogin,

@@ -2,7 +2,9 @@ import {
   signInWithPopup,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
 } from 'firebase/auth';
 import {
   collection,
@@ -28,6 +30,28 @@ import { auth, db, storage, googleProvider } from '../lib/firebase';
 
 // Authentication functions
 export const authService = {
+  // Sign in with Email and Password
+  signInWithEmail: async (email, password) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return result.user;
+    } catch (error) {
+      console.error('Email sign in error:', error);
+      throw error;
+    }
+  },
+
+  // Sign up with Email and Password
+  signUpWithEmail: async (email, password) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      return result.user;
+    } catch (error) {
+      console.error('Email sign up error:', error);
+      throw error;
+    }
+  },
+
   // Sign in with Google
   signInWithGoogle: async () => {
     try {
