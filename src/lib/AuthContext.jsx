@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }) => {
 
   const navigateToLogin = () => {
     // Trigger Google sign in
+    console.log("prompting user to sign in with Google");
     authService.signInWithGoogle().catch((error) => {
       console.error('Login error:', error);
       setAuthError({

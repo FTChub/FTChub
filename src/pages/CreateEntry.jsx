@@ -93,7 +93,7 @@ export default function CreateEntry() {
 
   const handleSubmit = async () => {
     if (!user?.email) return;
-    
+    console.log("creating entry with data:", form);
     setSaving(true);
     try {
       await entryService.createEntry({
@@ -109,6 +109,7 @@ export default function CreateEntry() {
       console.error('Create entry error:', error);
     } finally {
       setSaving(false);
+      console.log("finished creating entry");
     }
   };
 
