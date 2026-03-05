@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+
+// helper to convert Firestore timestamps or raw values to Date
+const parseTimestamp = (ts) => {
+  if (!ts) return new Date(0);
+  if (ts.toDate) return ts.toDate();
+  return new Date(ts);
+};
 import { entryService, bookmarkService, commentService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -367,7 +374,7 @@ export default function EntryDetail() {
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-orange-400 font-medium">{comment.username}</span>
                     <span className="text-slate-500 text-sm">
-                      {format(new Date(comment.createdAt), "MMM d, yyyy 'at' HH:mm")}
+                      {format(parseTimestamp(comment.createdAt), "MMM d, yyyy 'at' HH:mm")}
                     </span>
                   </div>
                   {(user?.uid === comment.user_id || isAdmin) && (
