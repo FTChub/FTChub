@@ -72,6 +72,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const navigateToLogin = () => {
+    // Redirect to login page
+    window.location.href = '/Login';
+  };
+
   const refreshUser = async () => {
     if (auth.currentUser) {
       try {
