@@ -180,59 +180,6 @@ export default function AdminPanel() {
           )}
         </CardContent>
       </Card>
-
-      {/* Regular Users */}
-      <Card className="bg-slate-800/50 border-slate-700/50">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-white text-base">Users ({regularUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 text-orange-500 animate-spin" /></div>
-          ) : regularUsers.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-4">No regular users</p>
-          ) : (
-            <div className="space-y-3">
-              {regularUsers.map((u) => (
-                <div key={u.uid} className="flex items-center gap-3 py-2">
-                  <div className="w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-slate-300 text-xs font-bold shrink-0">
-                    {u.full_name?.[0]?.toUpperCase() || u.email?.[0]?.toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{u.full_name || "—"}</p>
-                    <p className="text-slate-500 text-xs truncate">{u.email}</p>
-                  </div>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-slate-400 hover:text-orange-400 gap-1.5 shrink-0">
-                        <Crown className="w-3.5 h-3.5" />
-                        Make Admin
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-slate-800 border-slate-700">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-white">Make Admin</AlertDialogTitle>
-                        <AlertDialogDescription className="text-slate-400">
-                          Grant admin privileges to {u.full_name || u.email}? They will be able to delete any post.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => updateRoleMutation.mutate({ id: u.uid, role: "admin" })}
-                          className="bg-orange-600 hover:bg-orange-700"
-                        >
-                          Make Admin
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
