@@ -53,6 +53,7 @@ import CreateEntry from './pages/CreateEntry';
 import EntryDetail from './pages/EntryDetail';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
+import OfficialPosts from './pages/OfficialPosts';
 import MyEntries from './pages/MyEntries';
 import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
@@ -65,6 +66,7 @@ export const PAGES = {
     "EntryDetail": EntryDetail,
     "Home": Home,
     "Messages": Messages,
+    "OfficialPosts": OfficialPosts,
     "MyEntries": MyEntries,
     "Profile": Profile,
 }

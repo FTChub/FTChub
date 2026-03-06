@@ -30,6 +30,10 @@ export default function CreateEntry() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [tagInput, setTagInput] = useState("");
+  // detect "official" query param
+  const searchParams = new URLSearchParams(window.location.search);
+  const isOfficialMode = searchParams.get("official") === "true";
+
   const [form, setForm] = useState({
     team_number: "",
     team_name: "",
@@ -41,6 +45,7 @@ export default function CreateEntry() {
     content: "",
     image_urls: [],
     file_urls: [],
+    is_official: isOfficialMode,
   });
 
   const updateField = (field, value) => setForm((p) => ({ ...p, [field]: value }));
@@ -93,6 +98,11 @@ export default function CreateEntry() {
 
   const handleSubmit = async () => {
     if (!user?.email) return;
+    if (form.is_official && user.role !== "admin") {
+      // unauthorized attempt
+      alert("Only admins can create official posts.");
+      return;
+    }
     //console.log("creating entry with data:", form);
     setSaving(true);
     try {
@@ -104,7 +114,12 @@ export default function CreateEntry() {
         created_by: user.email,
         created_date: new Date().toISOString(),
       });
-      navigate(createPageUrl("Home"));
+      // navigate according to mode
+      if (form.is_official) {
+        navigate(createPageUrl("OfficialPosts"));
+      } else {
+        navigate(createPageUrl("Home"));
+      }
     } catch (error) {
       console.error('Create entry error:', error);
     } finally {
@@ -117,6 +132,11 @@ export default function CreateEntry() {
 
   return (
     <div className="max-w-2xl mx-auto">
+      {form.is_official && (
+        <div className="mb-6 p-4 bg-yellow-600/20 border-l-4 border-yellow-400 text-yellow-200">
+          You are creating an <strong>official post</strong>. Only admins may publish this content.
+        </div>
+      )}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm mb-6"

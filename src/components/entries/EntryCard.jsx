@@ -44,9 +44,16 @@ export default function EntryCard({ entry }) {
         )}
         <CardContent className="p-5">
           <div className="flex items-start justify-between gap-3 mb-3">
-            <Badge className={`${categoryColors[entry.category]} border text-xs font-medium`}>
-              {categoryLabels[entry.category] || entry.category}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className={`${categoryColors[entry.category]} border text-xs font-medium`}>
+                {categoryLabels[entry.category] || entry.category}
+              </Badge>
+              {entry.is_official && (
+                <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs font-medium">
+                  Official
+                </Badge>
+              )}
+            </div>
             <span className="text-xs text-slate-500 whitespace-nowrap">
               #{entry.team_number}
             </span>

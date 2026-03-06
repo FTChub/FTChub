@@ -19,7 +19,7 @@ import { format } from "date-fns";
 
 export default function Messages() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState("");
@@ -147,8 +147,8 @@ export default function Messages() {
 
   // dismiss any toasts when user lands on this page
   React.useEffect(() => {
-    toast.dismiss();
-  }, [toast]);
+    dismiss();
+  }, [dismiss]);
 
   // setup realtime listener for incoming messages
   React.useEffect(() => {
