@@ -37,19 +37,10 @@ export default function EntryDetail() {
   const entryId = urlParams.get("id");
   const [commentText, setCommentText] = useState("");
 
+  // fetch entry without modifying it; view counting happens separately below
   const { data: entry, isLoading } = useQuery({
     queryKey: ["entry", entryId],
-    queryFn: async () => {
-      const e = await entryService.getEntry(entryId);
-      if (e) {
-        // Increment view count
-        await entryService.updateEntry(entryId, { 
-          view_count: (e.view_count || 0) + 1 
-        });
-        return { ...e, view_count: (e.view_count || 0) + 1 };
-      }
-      return null;
-    },
+    queryFn: () => entryService.getEntry(entryId),
     enabled: !!entryId,
   });
 
@@ -84,6 +75,27 @@ export default function EntryDetail() {
   const hasUpvoted = entry?.upvoted_by?.includes(user?.email);
   const isAdmin = user?.role === "admin";
 
+  // if the user hasn't viewed this entry before, increment unique view counter
+  React.useEffect(() => {
+    if (!entry || !user?.email) return;
+    const viewedBy = entry.viewed_by || [];
+    if (!viewedBy.includes(user.email)) {
+      // attempt to update in database; only update cache on success
+      entryService
+        .updateEntry(entryId, {
+          view_count: (entry.view_count || 0) + 1,
+          viewed_by: [...viewedBy, user.email]
+        })
+        .then(() => {
+          queryClient.setQueryData(["entry", entryId], {
+            ...entry,
+            view_count: (entry.view_count || 0) + 1,
+            viewed_by: [...viewedBy, user.email]
+          });
+        })
+        .catch((err) => console.error('Error incrementing unique view', err));
+    }
+  }, [entry, user, entryId, queryClient]);
   const upvoteMutation = useMutation({
     mutationFn: async () => {
       if (!user?.email || !entry) return;

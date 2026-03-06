@@ -590,14 +590,9 @@ export const messageService = {
     }
   },
 
-  // Delete message
+  // Delete message - disabled (messages are immutable once sent)
   deleteMessage: async (messageId) => {
-    try {
-      await deleteDoc(doc(db, 'messages', messageId));
-      return true;
-    } catch (error) {
-      console.error('Delete message error:', error);
-      throw error;
-    }
+    console.warn('deleteMessage called but deletion is disabled');
+    throw new Error('Message deletion is not allowed');
   }
 };

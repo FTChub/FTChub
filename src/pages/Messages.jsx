@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { MessageSquare, Send, User, Trash2 } from "lucide-react";
+import { MessageSquare, Send, User } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Messages() {
@@ -84,15 +84,8 @@ export default function Messages() {
     },
   });
 
-  const deleteMessageMutation = useMutation({
-    mutationFn: async (messageId) => {
-      await messageService.deleteMessage(messageId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", user?.uid] });
-      queryClient.invalidateQueries({ queryKey: ["conversation", user?.uid, selectedUser?.uid] });
-    },
-  });
+  // message deletion is not allowed any more; keep messages read-only once sent.
+
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedUser) return;
@@ -203,10 +196,17 @@ export default function Messages() {
           ["conversation", user.uid, selectedUser.uid],
           msgs
         );
+
+        // automatically mark any inbound unread messages as read
+        msgs.forEach((m) => {
+          if (m.sender_id !== user.uid && !m.read) {
+            markAsReadMutation.mutate(m.id);
+          }
+        });
       }
     );
     return unsubscribe;
-  }, [user, selectedUser, queryClient]);
+  }, [user, selectedUser, queryClient, markAsReadMutation]);
 
   if (!user) {
     return (
@@ -318,27 +318,9 @@ export default function Messages() {
                         }`}>
                           {format(parseTimestamp(message.createdAt), "MMM d, HH:mm")}
                         </p>
-                        {message.sender_id !== user.uid && !message.read && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => markAsReadMutation.mutate(message.id)}
-                            className="text-xs mt-1 h-auto p-0 text-slate-400 hover:text-white"
-                          >
-                            Mark as read
-                          </Button>
-                        )}
+
                       </div>
-                      {message.sender_id === user.uid && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteMessageMutation.mutate(message.id)}
-                          className="ml-2 text-slate-400 hover:text-red-400"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      )}
+
                     </div>
                   ))}
                 </div>

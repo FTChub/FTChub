@@ -160,7 +160,7 @@ export default function Layout({ children, currentPageName }) {
       <main className="flex-1 min-w-0">
         {/* Mobile header */}
         <div className="lg:hidden sticky top-0 z-30 bg-slate-900/90 backdrop-blur-lg border-b border-slate-800/50 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-400">
+          <button onClick={() => setSidebarOpen(true)} className="text-slate-400 p-2 z-10">
             <Menu className="w-5 h-5" />
           </button>
           <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
