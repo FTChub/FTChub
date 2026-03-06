@@ -1,7 +1,7 @@
 // Inspired by react-hot-toast library
 import { useState, useEffect } from "react";
 
-const TOAST_LIMIT = 20;
+const TOAST_LIMIT = 3;
 // default toast lifespan (ms) – keep modest so they auto-dismiss quickly
 const TOAST_REMOVE_DELAY = 5000;
 
@@ -134,6 +134,11 @@ function toast({ ...props }) {
       },
     },
   });
+
+  // automatically dismiss after delay so toasts don't linger indefinitely
+  setTimeout(() => {
+    dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+  }, TOAST_REMOVE_DELAY);
 
   return {
     id,
