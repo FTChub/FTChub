@@ -138,9 +138,6 @@ export default function AdminPanel() {
             <div className="space-y-3">
               {admins.map((u) => (
                 <div key={u.uid} className="flex items-center gap-3 py-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {u.full_name?.[0]?.toUpperCase() || u.email?.[0]?.toUpperCase()}
-                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate">{u.full_name || "—"}</p>
                     <p className="text-slate-500 text-xs truncate">{u.email}</p>
