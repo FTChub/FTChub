@@ -24,6 +24,11 @@ export default function Messages() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [messageText, setMessageText] = useState("");
   const [newRecipient, setNewRecipient] = useState("");
+  const messagesEndRef = React.useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const { data: messagesData = [] } = useQuery({
     queryKey: ["messages", user?.uid],
@@ -56,6 +61,10 @@ export default function Messages() {
   React.useEffect(() => {
     setConversation(conversationData);
   }, [conversationData]);
+
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [conversation]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData) => {
@@ -246,8 +255,8 @@ export default function Messages() {
                     key={conv.uid}
                     onClick={() => setSelectedUser(conv)}
                     className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.uid === conv.uid
-                        ? "bg-orange-500/20 border border-orange-500/30"
-                        : "bg-slate-900/50 hover:bg-slate-900/80"
+                      ? "bg-orange-500/20 border border-orange-500/30"
+                      : "bg-slate-900/50 hover:bg-slate-900/80"
                       }`}
                   >
                     <div className="flex items-center justify-between">
@@ -297,8 +306,8 @@ export default function Messages() {
                     >
                       <div
                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_id === user.uid
-                            ? "bg-orange-600 text-white"
-                            : "bg-slate-700 text-white"
+                          ? "bg-orange-600 text-white"
+                          : "bg-slate-700 text-white"
                           }`}
                       >
                         <p className="text-sm">{message.content}</p>
@@ -311,6 +320,7 @@ export default function Messages() {
 
                     </div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Send Message */}
