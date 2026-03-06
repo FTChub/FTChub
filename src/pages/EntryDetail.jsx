@@ -6,7 +6,7 @@ const parseTimestamp = (ts) => {
   if (ts.toDate) return ts.toDate();
   return new Date(ts);
 };
-import { entryService, bookmarkService, commentService } from "@/api/firebaseClient";
+import { entryService, bookmarkService, commentService, realtimeService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -59,11 +59,26 @@ export default function EntryDetail() {
     enabled: !!user?.email,
   });
 
-  const { data: comments = [] } = useQuery({
+  const { data: commentsData = [] } = useQuery({
     queryKey: ["comments", entryId],
     queryFn: () => commentService.getCommentsForEntry(entryId),
     enabled: !!entryId,
   });
+
+  const [comments, setComments] = useState(commentsData);
+  React.useEffect(() => {
+    setComments(commentsData);
+  }, [commentsData]);
+
+  // realtime subscription for comments
+  React.useEffect(() => {
+    if (!entryId) return;
+    const unsubscribe = realtimeService.onCommentsForEntry(entryId, (msgs) => {
+      setComments(msgs);
+      queryClient.setQueryData(["comments", entryId], msgs);
+    });
+    return unsubscribe;
+  }, [entryId, queryClient]);
 
   const isBookmarked = bookmarks.some((b) => b.entry_id === entryId);
   const hasUpvoted = entry?.upvoted_by?.includes(user?.email);

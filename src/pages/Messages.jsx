@@ -7,7 +7,7 @@ const parseTimestamp = (ts) => {
   return new Date(ts);
 };
 import { useAuth } from "@/lib/AuthContext";
-import { messageService, userService } from "@/api/firebaseClient";
+import { messageService, userService, realtimeService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,22 +25,37 @@ export default function Messages() {
   const [messageText, setMessageText] = useState("");
   const [newRecipient, setNewRecipient] = useState("");
 
-  const { data: messages = [] } = useQuery({
+  const { data: messagesData = [] } = useQuery({
     queryKey: ["messages", user?.uid],
     queryFn: () => messageService.getMessagesForUser(user.uid),
     enabled: !!user?.uid,
   });
+
+  // keep local inbox state that will be driven by realtime listener
+  const [inbox, setInbox] = useState(messagesData);
+  const inboxRef = React.useRef(messagesData);
+
+  // sync query results into inbox state on initial load/refresh
+  React.useEffect(() => {
+    setInbox(messagesData);
+    inboxRef.current = messagesData;
+  }, [messagesData]);
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ["allUsers"],
     queryFn: () => userService.getAllUsers(),
   });
 
-  const { data: conversation = [] } = useQuery({
+  const { data: conversationData = [] } = useQuery({
     queryKey: ["conversation", user?.uid, selectedUser?.uid],
     queryFn: () => messageService.getConversation(user.uid, selectedUser.uid),
     enabled: !!user?.uid && !!selectedUser?.uid,
   });
+
+  const [conversation, setConversation] = useState(conversationData);
+  React.useEffect(() => {
+    setConversation(conversationData);
+  }, [conversationData]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData) => {
@@ -50,10 +65,6 @@ export default function Messages() {
       queryClient.invalidateQueries({ queryKey: ["messages", user?.uid] });
       queryClient.invalidateQueries({ queryKey: ["conversation", user?.uid, selectedUser?.uid] });
       setMessageText("");
-      toast({
-        title: "Message sent",
-        description: "Your message has been sent successfully.",
-      });
     },
     onError: () => {
       toast({
@@ -111,7 +122,7 @@ export default function Messages() {
 
   const getUniqueConversations = () => {
     const conversations = {};
-    messages.forEach(message => {
+    inbox.forEach(message => {
       const otherUserId = message.sender_id === user.uid ? message.recipient_id : message.sender_id;
       const otherUsername = message.sender_id === user.uid ? message.recipient_username : message.sender_username;
 
@@ -133,6 +144,69 @@ export default function Messages() {
     });
     return Object.values(conversations);
   };
+
+  // dismiss any toasts when user lands on this page
+  React.useEffect(() => {
+    toast.dismiss();
+  }, [toast]);
+
+  // setup realtime listener for incoming messages
+  React.useEffect(() => {
+    if (!user?.uid) return;
+    const unsubscribe = realtimeService.onMessagesForUser(user.uid, (msgs) => {
+      // sort desc by createdAt just to be safe
+      msgs.sort((a, b) => {
+        const da = parseTimestamp(a.createdAt);
+        const db = parseTimestamp(b.createdAt);
+        return db - da;
+      });
+
+      // detect new messages
+      if (inboxRef.current && msgs.length > inboxRef.current.length) {
+        const newMsgs = msgs.filter(
+          (m) => !inboxRef.current.some((o) => o.id === m.id)
+        );
+        newMsgs.forEach((m) => {
+          if (m.sender_id !== user.uid) {
+            toast({
+              title: "New message",
+              description: `From ${m.sender_username}`,
+              duration: Infinity,
+            });
+          }
+        });
+      }
+
+      setInbox(msgs);
+      inboxRef.current = msgs;
+      queryClient.setQueryData(["messages", user.uid], msgs);
+    });
+
+    return unsubscribe;
+  }, [user, queryClient, toast]);
+
+  // watch conversation realtime as well
+  React.useEffect(() => {
+    if (!user?.uid || !selectedUser?.uid) return;
+    const unsubscribe = realtimeService.onConversation(
+      user.uid,
+      selectedUser.uid,
+      (msgs) => {
+        // sort ascending
+        msgs.sort((a, b) => {
+          const da = parseTimestamp(a.createdAt);
+          const db = parseTimestamp(b.createdAt);
+          return da - db;
+        });
+        setConversation(msgs);
+        queryClient.setQueryData(
+          ["conversation", user.uid, selectedUser.uid],
+          msgs
+        );
+      }
+    );
+    return unsubscribe;
+  }, [user, selectedUser, queryClient]);
 
   if (!user) {
     return (

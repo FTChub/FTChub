@@ -404,6 +404,64 @@ export const realtimeService = {
       }
     });
     return unsubscribe;
+  },
+
+  // Listen to messages for inbox (recipient)
+  onMessagesForUser: (userId, callback) => {
+    const messagesQuery = query(
+      collection(db, 'messages'),
+      where('recipient_id', '==', userId)
+    );
+    const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
+      let msgs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // sort descending
+      msgs.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+      callback(msgs);
+    });
+    return unsubscribe;
+  },
+
+  // Listen to conversation between two users
+  onConversation: (userId1, userId2, callback) => {
+    const messagesQuery = query(
+      collection(db, 'messages'),
+      where('sender_id', 'in', [userId1, userId2]),
+      where('recipient_id', 'in', [userId1, userId2])
+    );
+    const unsubscribe = onSnapshot(messagesQuery, (querySnapshot) => {
+      let msgs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // sort ascending
+      msgs.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateA - dateB;
+      });
+      callback(msgs);
+    });
+    return unsubscribe;
+  },
+
+  // Listen for comments on an entry
+  onCommentsForEntry: (entryId, callback) => {
+    const commentsQuery = query(
+      collection(db, 'comments'),
+      where('entry_id', '==', entryId)
+    );
+    const unsubscribe = onSnapshot(commentsQuery, (querySnapshot) => {
+      let comments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // sort by createdAt asc
+      comments.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt || 0);
+        return dateA - dateB;
+      });
+      callback(comments);
+    });
+    return unsubscribe;
   }
 };
 
