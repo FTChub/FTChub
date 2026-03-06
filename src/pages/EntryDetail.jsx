@@ -6,7 +6,7 @@ const parseTimestamp = (ts) => {
   if (ts.toDate) return ts.toDate();
   return new Date(ts);
 };
-import { entryService, bookmarkService, commentService, realtimeService } from "@/api/firebaseClient";
+import { entryService, bookmarkService, commentService, realtimeService, userService } from "@/api/firebaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, Eye, Calendar, Tag, Download, ExternalLink, Trash2, MessageSquare, Send
+  ArrowLeft, ArrowUp, Bookmark, BookmarkCheck, Eye, Calendar, Tag, Download, ExternalLink, Trash2, MessageSquare, Send, Shield
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -54,6 +54,11 @@ export default function EntryDetail() {
     queryKey: ["comments", entryId],
     queryFn: () => commentService.getCommentsForEntry(entryId),
     enabled: !!entryId,
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ["all-users"],
+    queryFn: () => userService.getAllUsers(),
   });
 
   const [comments, setComments] = useState(commentsData);
@@ -122,6 +127,8 @@ export default function EntryDetail() {
       entry_id: entryId,
       user_id: user.uid,
       username: user.username,
+      user_email: user.email,
+      user_role: user.role || "user",
       content: commentText.trim(),
     });
   };
@@ -168,9 +175,9 @@ export default function EntryDetail() {
         const bm = bookmarks.find((b) => b.entry_id === entryId);
         if (bm) await bookmarkService.deleteBookmark(bm.id);
       } else {
-        await bookmarkService.createBookmark({ 
-          entry_id: entryId, 
-          user_email: user.email 
+        await bookmarkService.createBookmark({
+          entry_id: entryId,
+          user_email: user.email
         });
       }
     },
@@ -243,11 +250,10 @@ export default function EntryDetail() {
         <Button
           onClick={() => upvoteMutation.mutate()}
           variant="outline"
-          className={`gap-2 rounded-xl border-slate-700/50 ${
-            hasUpvoted
-              ? "bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 hover:text-orange-400"
-              : "text-slate-400 hover:text-white bg-slate-800/50"
-          }`}
+          className={`gap-2 rounded-xl border-slate-700/50 ${hasUpvoted
+            ? "bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 hover:text-orange-400"
+            : "text-slate-400 hover:text-white bg-slate-800/50"
+            }`}
         >
           <ArrowUp className="w-4 h-4" />
           {entry.upvotes || 0}
@@ -255,11 +261,10 @@ export default function EntryDetail() {
         <Button
           onClick={() => bookmarkMutation.mutate()}
           variant="outline"
-          className={`gap-2 rounded-xl border-slate-700/50 ${
-            isBookmarked
-              ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-400"
-              : "text-slate-400 hover:text-white bg-slate-800/50"
-          }`}
+          className={`gap-2 rounded-xl border-slate-700/50 ${isBookmarked
+            ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-400"
+            : "text-slate-400 hover:text-white bg-slate-800/50"
+            }`}
         >
           {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
           {isBookmarked ? "Saved" : "Save"}
@@ -395,29 +400,45 @@ export default function EntryDetail() {
           )}
 
           <div className="space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="border-b border-slate-700/30 pb-4 last:border-b-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-orange-400 font-medium">{comment.username}</span>
-                    <span className="text-slate-500 text-sm">
-                      {format(parseTimestamp(comment.createdAt), "MMM d, yyyy 'at' HH:mm")}
-                    </span>
+            {comments.map((comment) => {
+              const commentUser = users.find(u => u.uid === comment.user_id);
+              const isCommentAdmin = commentUser?.role === "admin" || comment.user_role === "admin";
+              const isAuthor = (commentUser?.email === entry.created_by) || (comment.user_email === entry.created_by);
+
+              return (
+                <div key={comment.id} className="border-b border-slate-700/30 pb-4 last:border-b-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-orange-400 font-medium flex items-center gap-1.5">
+                        {comment.username}
+                        {isCommentAdmin && (
+                          <Shield className="w-3.5 h-3.5 text-yellow-500" title="Admin" />
+                        )}
+                        {isAuthor && (
+                          <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold">
+                            Author
+                          </Badge>
+                        )}
+                      </span>
+                      <span className="text-slate-500 text-sm">
+                        {format(parseTimestamp(comment.createdAt), "MMM d, yyyy 'at' HH:mm")}
+                      </span>
+                    </div>
+                    {(user?.uid === comment.user_id || isAdmin) && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => deleteCommentMutation.mutate(comment.id)}
+                        className="text-slate-400 hover:text-red-400"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
-                  {(user?.uid === comment.user_id || isAdmin) && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deleteCommentMutation.mutate(comment.id)}
-                      className="text-slate-400 hover:text-red-400"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  )}
+                  <p className="text-white leading-relaxed">{comment.content}</p>
                 </div>
-                <p className="text-white leading-relaxed">{comment.content}</p>
-              </div>
-            ))}
+              );
+            })}
             {comments.length === 0 && (
               <p className="text-slate-500 text-center py-8">No comments yet. Be the first to comment!</p>
             )}
