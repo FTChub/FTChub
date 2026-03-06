@@ -10,7 +10,6 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
-  			// override various semantic colors using CSS variables
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -61,25 +60,21 @@ module.exports = {
   				border: 'hsl(var(--sidebar-border))',
   				ring: 'hsl(var(--sidebar-ring))'
   			},
-  			// make the entire blue color palette solid black so that
-  			// any usages of blue become dark/black instead
   			blue: {
-  				50: '#000',
-  				100: '#000',
-  				200: '#000',
-  				300: '#000',
-  				400: '#000',
-  				500: '#000',
-  				600: '#000',
-  				700: '#000',
-  				800: '#000',
-  				900: '#000',
+  				'50': '#000',
+  				'100': '#000',
+  				'200': '#000',
+  				'300': '#000',
+  				'400': '#000',
+  				'500': '#000',
+  				'600': '#000',
+  				'700': '#000',
+  				'800': '#000',
+  				'900': '#000',
   				DEFAULT: '#000'
   			},
-  			// override the default "black" color to white for text purposes
   			black: '#fff'
   		},
-
   		keyframes: {
   			'accordion-down': {
   				from: {
