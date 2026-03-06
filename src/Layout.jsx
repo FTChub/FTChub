@@ -4,15 +4,15 @@ import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { authService, realtimeService } from "@/api/firebaseClient";
 import {
-  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare
+  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare, Star
 } from "lucide-react";
 
 const navItems = [
   { name: "Browse", page: "Home", icon: Home },
-  { name: "Official Posts", page: "OfficialPosts", icon: Shield },
+  { name: "Official Posts", page: "OfficialPosts", icon: Star },
   { name: "Create Post", page: "CreateEntry", icon: Plus },
   { name: "My Posts", page: "MyEntries", icon: FolderOpen },
-  { name: "Bookmarks", page: "Bookmarks", icon: Bookmark },
+  { name: "Saved Posts", page: "Bookmarks", icon: Bookmark },
 ];
 
 const userMenuItems = [
@@ -67,12 +67,8 @@ export default function Layout({ children, currentPageName }) {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-6 flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-sm">FTC</span>
-          </div>
           <div>
-            <h1 className="text-white font-bold text-lg leading-none">FTC Hub</h1>
-            <p className="text-slate-500 text-xs mt-0.5">Team Resource Database</p>
+            <h1 className="text-white font-bold text-lg leading-none">FIRST Tech Forum</h1>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -157,9 +153,6 @@ export default function Layout({ children, currentPageName }) {
         {user && (
           <div className="p-4 mx-3 mb-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold">
-                {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
-              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white text-sm font-medium truncate">{user.username || user.full_name || "User"}</p>
                 <p className="text-slate-500 text-xs truncate">{user.email}</p>
@@ -179,10 +172,7 @@ export default function Layout({ children, currentPageName }) {
           <button onClick={() => setSidebarOpen(true)} className="text-slate-400 p-2 z-10">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">FTC</span>
-          </div>
-          <span className="text-white font-semibold text-sm">FTC Hub</span>
+          <span className="text-white font-semibold text-sm">FIRST Tech Forum</span>
         </div>
 
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
