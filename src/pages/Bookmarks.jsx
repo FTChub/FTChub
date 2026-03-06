@@ -41,7 +41,7 @@ export default function Bookmarks() {
       ) : bookmarkedEntries.length === 0 ? (
         <EmptyState
           title="No bookmarks yet"
-          description="Save entries you find useful and they'll appear here"
+          description="Save posts you find useful and they'll appear here"
           showCreate={false}
         />
       ) : (

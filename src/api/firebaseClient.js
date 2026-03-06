@@ -232,7 +232,20 @@ export const entryService = {
   // Delete entry
   deleteEntry: async (entryId) => {
     try {
-      await deleteDoc(doc(db, 'entries', entryId));
+      const entryRef = doc(db, 'entries', entryId);
+      const entrySnap = await getDoc(entryRef);
+      if (entrySnap.exists()) {
+        const data = entrySnap.data();
+        const urlsToDelete = [...(data.image_urls || []), ...(data.file_urls || [])];
+        for (const url of urlsToDelete) {
+          try {
+            await deleteObject(ref(storage, url));
+          } catch (err) {
+            console.error('Failed to delete storage object', err);
+          }
+        }
+      }
+      await deleteDoc(entryRef);
       return true;
     } catch (error) {
       console.error('Delete entry error:', error);

@@ -197,7 +197,7 @@ export default function EntryDetail() {
   if (!entry) {
     return (
       <div className="text-center py-20">
-        <p className="text-slate-400">Entry not found</p>
+        <p className="text-slate-400">Post not found</p>
       </div>
     );
   }
@@ -251,8 +251,8 @@ export default function EntryDetail() {
           onClick={() => upvoteMutation.mutate()}
           variant="outline"
           className={`gap-2 rounded-xl border-slate-700/50 ${hasUpvoted
-            ? "bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 hover:text-orange-400"
-            : "text-slate-400 hover:text-white bg-slate-800/50"
+            ? "bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20 hover:text-orange-400 hover:border-orange-500/40"
+            : "text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/60 hover:border-slate-600/50"
             }`}
         >
           <ArrowUp className="w-4 h-4" />
@@ -262,8 +262,8 @@ export default function EntryDetail() {
           onClick={() => bookmarkMutation.mutate()}
           variant="outline"
           className={`gap-2 rounded-xl border-slate-700/50 ${isBookmarked
-            ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-400"
-            : "text-slate-400 hover:text-white bg-slate-800/50"
+            ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-500/40"
+            : "text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/60 hover:border-slate-600/50"
             }`}
         >
           {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
@@ -280,7 +280,7 @@ export default function EntryDetail() {
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-slate-800 border-slate-700">
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-white">Delete Entry</AlertDialogTitle>
+                <AlertDialogTitle className="text-white">Delete Post</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
                   Are you sure you want to delete "{entry.title}"? This action cannot be undone.
                 </AlertDialogDescription>
@@ -340,30 +340,6 @@ export default function EntryDetail() {
             </Badge>
           ))}
         </div>
-      )}
-
-      {/* Files */}
-      {entry.file_urls?.length > 0 && (
-        <Card className="bg-slate-800/30 border-slate-700/30">
-          <CardContent className="p-5">
-            <h3 className="text-white font-semibold text-sm mb-3">Attachments</h3>
-            <div className="space-y-2">
-              {entry.file_urls.map((url, i) => (
-                <a
-                  key={i}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 bg-slate-900/50 px-4 py-3 rounded-lg hover:bg-slate-900/80 transition-colors group"
-                >
-                  <Download className="w-4 h-4 text-slate-500 group-hover:text-orange-400" />
-                  <span className="text-slate-300 text-sm flex-1 truncate">{url.split("/").pop()}</span>
-                  <ExternalLink className="w-4 h-4 text-slate-600" />
-                </a>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Comments Section */}

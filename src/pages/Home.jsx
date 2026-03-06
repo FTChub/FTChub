@@ -83,7 +83,7 @@ export default function Home() {
         </div>
       ) : filtered.length === 0 ? (
         <EmptyState
-          title="No entries found"
+          title="No posts found"
           description={search || category !== "all" ? "Try adjusting your search or filters" : "Be the first to share a resource with the community!"}
         />
       ) : (

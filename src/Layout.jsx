@@ -10,8 +10,8 @@ import {
 const navItems = [
   { name: "Browse", page: "Home", icon: Home },
   { name: "Official Posts", page: "OfficialPosts", icon: Shield },
-  { name: "Create Entry", page: "CreateEntry", icon: Plus },
-  { name: "My Entries", page: "MyEntries", icon: FolderOpen },
+  { name: "Create Post", page: "CreateEntry", icon: Plus },
+  { name: "My Posts", page: "MyEntries", icon: FolderOpen },
   { name: "Bookmarks", page: "Bookmarks", icon: Bookmark },
 ];
 

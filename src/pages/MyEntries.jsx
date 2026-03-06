@@ -36,7 +36,7 @@ export default function MyEntries() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">My Entries</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">My Posts</h1>
         <p className="text-slate-400 text-sm">Manage the resources you've shared</p>
       </div>
 
@@ -46,7 +46,7 @@ export default function MyEntries() {
         </div>
       ) : entries.length === 0 ? (
         <EmptyState
-          title="No entries yet"
+          title="No posts yet"
           description="You haven't shared any resources with the community yet"
         />
       ) : (
@@ -60,15 +60,14 @@ export default function MyEntries() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 bg-red-500/20 hover:bg-red-500/40 text-red-400"
-                      onClick={(e) => e.preventDefault()}
+                      className="h-8 w-8 bg-red-500/20 hover:bg-red-500/40 text-red-400 relative z-10"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-slate-800 border-slate-700">
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-white">Delete Entry</AlertDialogTitle>
+                      <AlertDialogTitle className="text-white">Delete Post</AlertDialogTitle>
                       <AlertDialogDescription className="text-slate-400">
                         Are you sure you want to delete "{entry.title}"? This action cannot be undone.
                       </AlertDialogDescription>
