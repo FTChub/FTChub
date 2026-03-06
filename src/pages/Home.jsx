@@ -50,10 +50,13 @@ export default function Home() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          Explore Resources
+          Explore Forums
         </h1>
         <p className="text-slate-400 text-sm md:text-base">
           Discover and share knowledge with the FTC community
+        </p>
+        <p className="text-slate-400 text-sm md:text-base">
+          Disclamer: This website is not affiliated with FIRST.
         </p>
       </div>
 
