@@ -62,9 +62,15 @@ export default function Messages() {
     setConversation(conversationData);
   }, [conversationData]);
 
+  const prevSelectedUserId = React.useRef(null);
+
   React.useEffect(() => {
-    scrollToBottom();
-  }, [conversation]);
+    // Only scroll to bottom when newly opened or when a conversation finishes loading initially.
+    if (selectedUser?.uid && selectedUser.uid !== prevSelectedUserId.current && conversation.length > 0) {
+      scrollToBottom();
+      prevSelectedUserId.current = selectedUser.uid;
+    }
+  }, [conversation, selectedUser]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (messageData) => {
@@ -74,6 +80,7 @@ export default function Messages() {
       queryClient.invalidateQueries({ queryKey: ["messages", user?.uid] });
       queryClient.invalidateQueries({ queryKey: ["conversation", user?.uid, selectedUser?.uid] });
       setMessageText("");
+      setTimeout(scrollToBottom, 100);
     },
     onError: () => {
       toast({
