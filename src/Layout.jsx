@@ -4,15 +4,16 @@ import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
 import { authService, realtimeService } from "@/api/firebaseClient";
 import {
-  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare
+  Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare, Star
 } from "lucide-react";
+import { ModeToggle } from "@/components/mode-toggle";
 
 const navItems = [
   { name: "Browse", page: "Home", icon: Home },
-  { name: "Official Posts", page: "OfficialPosts", icon: Shield },
+  { name: "Official Posts", page: "OfficialPosts", icon: Star },
   { name: "Create Post", page: "CreateEntry", icon: Plus },
   { name: "My Posts", page: "MyEntries", icon: FolderOpen },
-  { name: "Bookmarks", page: "Bookmarks", icon: Bookmark },
+  { name: "Saved Posts", page: "Bookmarks", icon: Bookmark },
 ];
 
 const userMenuItems = [
@@ -40,13 +41,8 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex">
+    <div className="min-h-screen flex">
       <style>{`
-        :root {
-          --background: 222 47% 11%;
-          --foreground: 210 40% 98%;
-        }
-        body { background: #0f172a; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -61,22 +57,18 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full w-64 bg-slate-900 border-r border-slate-800/50 z-50
+        fixed top-0 left-0 h-full w-64 bg-sidebar border-r border-sidebar-border z-50
         flex flex-col transition-transform duration-300
         lg:translate-x-0 lg:static lg:z-auto
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
         <div className="p-6 flex items-center gap-3">
-          <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-sm">FTC</span>
-          </div>
           <div>
-            <h1 className="text-white font-bold text-lg leading-none">FTC Hub</h1>
-            <p className="text-slate-500 text-xs mt-0.5">Team Resource Database</p>
+            <h1 className="text-foreground font-bold text-lg leading-none">FIRST Tech Forum</h1>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto lg:hidden text-slate-400"
+            className="ml-auto lg:hidden text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -93,8 +85,8 @@ export default function Layout({ children, currentPageName }) {
                 className={`
                   flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-sm font-medium
                   ${isActive
-                    ? "bg-orange-500/10 text-orange-400"
-                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                   }
                 `}
               >
@@ -111,8 +103,8 @@ export default function Layout({ children, currentPageName }) {
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-sm font-medium
                 ${currentPageName === "AdminPanel"
-                  ? "bg-orange-500/10 text-orange-400"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                 }
               `}
             >
@@ -123,7 +115,7 @@ export default function Layout({ children, currentPageName }) {
           )}
 
           {/* User Menu Items */}
-          <div className="mt-4 pt-4 border-t border-slate-700/30">
+          <div className="mt-4 pt-4 border-t border-border">
             {userMenuItems.map(({ name, page, icon: Icon }) => {
               const isActive = currentPageName === page;
               return (
@@ -134,15 +126,15 @@ export default function Layout({ children, currentPageName }) {
                   className={`
                     flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 transition-all text-sm font-medium
                     ${isActive
-                      ? "bg-orange-500/10 text-orange-400"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                     }
                   `}
                 >
                   <Icon className="w-4.5 h-4.5" />
                   {name}
                   {name === "Messages" && unreadCount > 0 ? (
-                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
+                    <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
                       {unreadCount}
                     </span>
                   ) : isActive ? (
@@ -151,20 +143,20 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
               );
             })}
+            <div className="mt-2">
+              <ModeToggle />
+            </div>
           </div>
         </nav>
 
         {user && (
-          <div className="p-4 mx-3 mb-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
+          <div className="p-4 mx-3 mb-3 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white text-xs font-bold">
-                {user.full_name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
-              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">{user.username || user.full_name || "User"}</p>
-                <p className="text-slate-500 text-xs truncate">{user.email}</p>
+                <p className="text-card-foreground text-sm font-medium truncate">{user.username || user.full_name || "User"}</p>
+                <p className="text-muted-foreground text-xs truncate">{user.email}</p>
               </div>
-              <button onClick={handleLogout} className="text-slate-500 hover:text-red-400 transition-colors">
+              <button onClick={handleLogout} className="text-muted-foreground hover:text-destructive transition-colors">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -175,14 +167,11 @@ export default function Layout({ children, currentPageName }) {
       {/* Main content */}
       <main className="flex-1 min-w-0">
         {/* Mobile header */}
-        <div className="lg:hidden sticky top-0 z-30 bg-slate-900/90 backdrop-blur-lg border-b border-slate-800/50 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarOpen(true)} className="text-slate-400 p-2 z-10">
+        <div className="lg:hidden sticky top-0 z-30 bg-background/90 backdrop-blur-lg border-b border-border px-4 py-3 flex items-center gap-3">
+          <button onClick={() => setSidebarOpen(true)} className="text-muted-foreground hover:text-foreground p-2 z-10">
             <Menu className="w-5 h-5" />
           </button>
-          <div className="w-7 h-7 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">FTC</span>
-          </div>
-          <span className="text-white font-semibold text-sm">FTC Hub</span>
+          <span className="text-foreground font-semibold text-sm">FIRST Tech Forum</span>
         </div>
 
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
