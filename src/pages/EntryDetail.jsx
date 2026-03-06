@@ -412,7 +412,9 @@ export default function EntryDetail() {
                       <span className="text-orange-400 font-medium flex items-center gap-1.5">
                         {comment.username}
                         {isCommentAdmin && (
-                          <Shield className="w-3.5 h-3.5 text-yellow-500" title="Admin" />
+                          <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold">
+                            Admin
+                          </Badge>
                         )}
                         {isAuthor && (
                           <Badge className="bg-orange-500/10 text-orange-400 border border-orange-500/20 text-[10px] px-1.5 py-0 h-4 uppercase tracking-wider font-semibold">

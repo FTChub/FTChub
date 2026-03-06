@@ -100,14 +100,14 @@ export default function Messages() {
   };
 
   const handleStartConversation = () => {
-    const recipient = allUsers.find(u => u.username === newRecipient || u.email === newRecipient);
+    const recipient = allUsers.find(u => u.username === newRecipient);
     if (recipient && recipient.uid !== user.uid) {
       setSelectedUser(recipient);
       setNewRecipient("");
     } else {
       toast({
         title: "User not found",
-        description: "Please enter a valid username or email.",
+        description: "Please enter a valid username",
         variant: "destructive",
       });
     }
@@ -159,15 +159,6 @@ export default function Messages() {
         const newMsgs = msgs.filter(
           (m) => !inboxRef.current.some((o) => o.id === m.id)
         );
-        newMsgs.forEach((m) => {
-          if (m.sender_id !== user.uid) {
-            toast({
-              title: "New message",
-              description: `From ${m.sender_username}`,
-              duration: Infinity,
-            });
-          }
-        });
       }
 
       setInbox(msgs);
@@ -236,7 +227,7 @@ export default function Messages() {
             <CardContent>
               <div className="space-y-2 mb-4">
                 <Input
-                  placeholder="Start conversation with username or email"
+                  placeholder="Start conversation with username"
                   value={newRecipient}
                   onChange={(e) => setNewRecipient(e.target.value)}
                   className="bg-slate-900/50 border-slate-600 text-white"
@@ -254,11 +245,10 @@ export default function Messages() {
                   <div
                     key={conv.uid}
                     onClick={() => setSelectedUser(conv)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedUser?.uid === conv.uid
+                    className={`p-3 rounded-lg cursor-pointer transition-colors ${selectedUser?.uid === conv.uid
                         ? "bg-orange-500/20 border border-orange-500/30"
                         : "bg-slate-900/50 hover:bg-slate-900/80"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -306,16 +296,14 @@ export default function Messages() {
                       className={`flex ${message.sender_id === user.uid ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          message.sender_id === user.uid
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.sender_id === user.uid
                             ? "bg-orange-600 text-white"
                             : "bg-slate-700 text-white"
-                        }`}
+                          }`}
                       >
                         <p className="text-sm">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.sender_id === user.uid ? "text-orange-200" : "text-slate-400"
-                        }`}>
+                        <p className={`text-xs mt-1 ${message.sender_id === user.uid ? "text-orange-200" : "text-slate-400"
+                          }`}>
                           {format(parseTimestamp(message.createdAt), "MMM d, HH:mm")}
                         </p>
 

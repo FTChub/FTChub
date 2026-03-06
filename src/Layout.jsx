@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useAuth } from "@/lib/AuthContext";
-import { authService } from "@/api/firebaseClient";
+import { authService, realtimeService } from "@/api/firebaseClient";
 import {
   Home, Plus, FolderOpen, Bookmark, LogOut, Menu, X, ChevronRight, Shield, User, MessageSquare
 } from "lucide-react";
@@ -24,6 +24,16 @@ export default function Layout({ children, currentPageName }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const _navigate = useNavigate();
   const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const unsubscribe = realtimeService.onMessagesForUser(user.uid, (msgs) => {
+      const count = msgs.filter((m) => !m.read).length;
+      setUnreadCount(count);
+    });
+    return unsubscribe;
+  }, [user]);
 
   const handleLogout = async () => {
     await authService.signOut();
@@ -131,7 +141,13 @@ export default function Layout({ children, currentPageName }) {
                 >
                   <Icon className="w-4.5 h-4.5" />
                   {name}
-                  {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
+                  {name === "Messages" && unreadCount > 0 ? (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full ml-auto">
+                      {unreadCount}
+                    </span>
+                  ) : isActive ? (
+                    <ChevronRight className="w-4 h-4 ml-auto" />
+                  ) : null}
                 </Link>
               );
             })}
